@@ -45,7 +45,6 @@ remove_p_numbers <- c(didNotComplete$sub)
 exptdata <- exptdata %>%
   filter(!sub %in% remove_p_numbers)
 
-
 ## Standard trial exclusions ----
   
 
@@ -94,7 +93,7 @@ exptdata <- exptdata %>%
     select(m) %>%
     pull()
   
-  high_safe_single <- gazeOnDist1_data_means_byparticipant %>%
+  high_safe_single<- gazeOnDist1_data_means_byparticipant %>%
     ungroup() %>%
     filter(dType == "High Safe") %>%
     select(m) %>%
@@ -133,6 +132,7 @@ exptdata <- exptdata %>%
   lowSafe_absent.ttest <- t.test(low_safe_single, absent_single, paired = T)
   lowSafe_absent.es <- tibble(contrast = low_safe_single - absent_single) %>%
     summarise(mean_contrast = mean(contrast), sd_contrast = sd(contrast), d_z = mean_contrast/sd_contrast) %>% pull(d_z)
+
   
   #### ANOVA with factors reward (High, Low) and contingency (omission, safe): ----
   
@@ -291,11 +291,6 @@ exptdata <- exptdata %>%
   vincentized_data_tall <- saccade_direction_quartiles_means_byparticipant %>%
     filter(dType %in% c("Choice Low", "Choice High")) %>% 
     gather(key = "stimType", value = "propSaccades", "saccade_to_omissionDist", "saccade_to_safeDist")
-  
-  vincentized_data_tall_singledist <- saccade_direction_quartiles_means_byparticipant %>%
-    filter(!dType %in% c("Choice Low", "Choice High", "Absent")) %>%
-    select(sub, dType, OmissionSafe, HighLow, quartile, saccade_to_target, saccade_to_dist = saccade_to_omissionDist)
-
   
   #### ANOVA with factors: quartile(1-4), contingency (omission, safe) for each trial type ----
   aov_vincentized_high <- aov_car(propSaccades ~ quartile*stimType + Error(sub/quartile*stimType), 

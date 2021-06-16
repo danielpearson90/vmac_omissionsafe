@@ -92,8 +92,33 @@ exptdata <- exptdata %>%
     aov_gazeOnDist_singledist_reward_ommsafe <- aov_car(m ~ HighLow*OmissionSafe + Error(sub/HighLow*OmissionSafe), data = gazeOnDist1_data_means_byparticipant %>%
                                                           filter(!OmissionSafe %in% c("Choice", "Absent")),
                                                         anova_table = list(es="pes"))
-  
-  
+    
+    
+    #### t tests for distractor absent trials vs each other single distractor trial type ----
+    high_omission_single <- gazeOnDist1_data_means_byparticipant %>%
+      ungroup() %>%
+      filter(dType == "High Omission") %>%
+      select(m) %>%
+      pull()
+    
+    high_safe_single <- gazeOnDist1_data_means_byparticipant %>%
+      ungroup() %>%
+      filter(dType == "High Safe") %>%
+      select(m) %>%
+      pull()
+    
+    low_omission_single <- gazeOnDist1_data_means_byparticipant %>%
+      ungroup() %>%
+      filter(dType == "Low Omission") %>%
+      select(m) %>%
+      pull()
+    
+    low_safe_single <- gazeOnDist1_data_means_byparticipant %>%
+      ungroup() %>%
+      filter(dType == "Low Safe") %>%
+      select(m) %>%
+      pull()
+    
   ### Choice distractor trials ----
     choiceTrial_data_means_byparticipant <- exptdata %>%
       ungroup() %>%
@@ -134,7 +159,7 @@ exptdata <- exptdata %>%
   # BF for the reward x contingency interaction on choice trials:
   vmac_omission_choice <- high_omission_choice - low_omission_choice
   vmac_safe_choice <- high_safe_choice - low_safe_choice
-  
+
   vmac_interaction_BF <- 1/ttestBF(vmac_omission_choice, vmac_safe_choice, paired = T,
                                    nullInterval = c(-Inf, 0))
   
@@ -169,7 +194,7 @@ exptdata <- exptdata %>%
     mutate(first_saccade_loc = loc_1*1+loc_2*2+loc_3*3+loc_4*4+loc_5*5) # simplify first saccade location
     
   
-  saccadedata <- left_join(exptdata, saccade_filedata, by = c("sub" = "subj", "trial" = "trial")) %>% #join saccade data up with behavioural data
+  saccadedata <- left_join(exptdata, saccade_filedata, by = c("sub" = "subj", "trial" = "trial", "phase" = "phase")) %>% #join saccade data up with behavioural data
     mutate(saccade_to_target = if_else(targetLoc == first_saccade_loc, 1, 0)) %>% # create variables indicating whether first saccade went towards the target...
     mutate(saccade_to_dist1 = if_else(dType == "Absent", 2, 
                                           if_else(distractLoc == first_saccade_loc, 1, 0))) %>% # singleton (for all except distractor absent trials)
@@ -304,6 +329,15 @@ exptdata <- exptdata %>%
   lowChoice_vincentized_q4.BF_onetail <- 1/ttestBF(low_omission_choice_saccades_q4, low_safe_choice_saccades_q4, paired = T,
                                                    nullInterval = c(-Inf,0))
   
+  
+  vincentized_average <- summarySEwithin2(data = vincentized_data_tall,
+                                          measurevar = "propSaccades",
+                                          withinvars = c("stimType", "quartile", "dType"),
+                                          idvar = "sub")
+  
+  ggplot(vincentized_average %>% filter(dType == "Choice Low"), aes(x = quartile, y = propSaccades, colour = stimType)) +
+    geom_line(aes(group = stimType)) +
+    geom_point()
   ## FIXATION LATENCY ----
   
   fixation_latency_choice <- saccadedata %>% 
@@ -356,3 +390,4 @@ exptdata <- exptdata %>%
   lowChoice_fix.BF <- 1/ttestBF(low_choice_fix_omission, low_choice_fix_safe, paired = T)
   
   
+ 
